@@ -12,9 +12,13 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import java.time.LocalDate;
+import java.util.ArrayList;
 
 @Theme("mytheme")
 public class MyUI extends UI {
+
+    private ArrayList<Factura> arreglo;
+    private Grid<Factura> grid = new Grid<>();
 
     @Override
     protected void init(VaadinRequest vaadinRequest) {
@@ -27,23 +31,33 @@ public class MyUI extends UI {
 
         btn.addClickListener(e -> {
             System.out.println(date.getValue());
-            System.out.println("Hola");
-            DataSourcePostgreSQL s = new DataSourcePostgreSQL();
-            s.ejecutarConsulta("SELECT id, fecha_factura, folio_fiscal, fecha_mx, nombre_producto, medico, correo\n" +
-"  FROM public.vista_factura_por_compra_plan;");
         });
 
-//        Label l = new Label("HOLA");
-        Grid g = new Grid();
+        llenarTabla();
+        grid.setSizeFull();
+        
         layout.addComponents(date);
         layout.addComponent(btn);
-        layout.addComponent(g);        
-//        layout.addComponent(l);
+        layout.addComponent(grid);
         setContent(layout);
     }
 
     @WebServlet(urlPatterns = "/*", name = "MyUIServlet", asyncSupported = true)
     @VaadinServletConfiguration(ui = MyUI.class, productionMode = false)
     public static class MyUIServlet extends VaadinServlet {
+    }
+
+    public void llenarTabla() {
+        DataSourcePostgreSQL s = new DataSourcePostgreSQL();
+        arreglo = s.crearArreglo("SELECT fecha_factura, folio_fiscal, fecha_mx, "
+                + "nombre_producto, medico, correo   FROM public.vista_factura_por_compra_plan;");
+        grid.setItems(arreglo);
+        grid.addColumn(Factura::getFechaFactura).setCaption("Fecha de Factura").setResizable(false);
+        grid.addColumn(Factura::getFolioFiscal).setCaption("Folio Fiscal").setResizable(false);
+        grid.addColumn(Factura::getFechaCompra).setCaption("Fecha de Compra").setResizable(false);
+        grid.addColumn(Factura::getProductoComprado).setCaption("Producto comprado").setResizable(false);
+        grid.addColumn(Factura::getNombre).setCaption("Nombre de Usuario").setResizable(false);
+        grid.addColumn(Factura::getCorreo).setCaption("Correo").setResizable(false);
+
     }
 }

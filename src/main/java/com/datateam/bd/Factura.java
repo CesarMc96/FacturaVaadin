@@ -4,14 +4,14 @@ import java.util.Date;
 
 public class Factura {
 
-    private Date fechaFactura;
+    private String fechaFactura;
     private String folioFiscal;
-    private Date fechaCompra;
+    private String fechaCompra;
     private String productoComprado;
     private String nombre;
     private String correo;
 
-    public Factura(Date fechaFactura, String folioFiscal, Date fechaCompra, String productoComprado, String nombre, String correo) {
+    public Factura(String fechaFactura, String folioFiscal, String fechaCompra, String productoComprado, String nombre, String correo) {
         this.fechaFactura = fechaFactura;
         this.folioFiscal = folioFiscal;
         this.fechaCompra = fechaCompra;
@@ -20,11 +20,11 @@ public class Factura {
         this.correo = correo;
     }
 
-    public Date getFechaFactura() {
+    public String getFechaFactura() {
         return fechaFactura;
     }
 
-    public void setFechaFactura(Date fechaFactura) {
+    public void setFechaFactura(String fechaFactura) {
         this.fechaFactura = fechaFactura;
     }
 
@@ -36,11 +36,11 @@ public class Factura {
         this.folioFiscal = folioFiscal;
     }
 
-    public Date getFechaCompra() {
+    public String getFechaCompra() {
         return fechaCompra;
     }
 
-    public void setFechaCompra(Date fechaCompra) {
+    public void setFechaCompra(String fechaCompra) {
         this.fechaCompra = fechaCompra;
     }
 
