@@ -4,6 +4,7 @@ import java.util.Date;
 
 public class Factura {
 
+    private Integer id;
     private String fechaFactura;
     private String folioFiscal;
     private String fechaCompra;
@@ -11,13 +12,22 @@ public class Factura {
     private String nombre;
     private String correo;
 
-    public Factura(String fechaFactura, String folioFiscal, String fechaCompra, String productoComprado, String nombre, String correo) {
+    public Factura(Integer id, String fechaFactura, String folioFiscal, String fechaCompra, String productoComprado, String nombre, String correo) {
+        this.id = id;
         this.fechaFactura = fechaFactura;
         this.folioFiscal = folioFiscal;
         this.fechaCompra = fechaCompra;
         this.productoComprado = productoComprado;
         this.nombre = nombre;
         this.correo = correo;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getFechaFactura() {

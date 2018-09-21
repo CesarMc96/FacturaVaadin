@@ -14,6 +14,7 @@ public class DataSourcePostgreSQL implements DataSource {
     private Connection connection;
     private Statement st;
     private ArrayList<Factura> arreglo;
+    private Integer contador = 1;
 
     public DataSourcePostgreSQL() {
         System.out.println("Entro");
@@ -43,8 +44,9 @@ public class DataSourcePostgreSQL implements DataSource {
             while (rs.next()) {
 //                System.out.println(rs.getString(1) + " " + rs.getString(2) + " " + rs.getString(3)
 //                 + " " + rs.getString(4) + " " + rs.getString(5) + " " + rs.getString(6));
-                arreglo.add(new Factura(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4),
+                arreglo.add(new Factura(contador, rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4),
                         rs.getString(5), rs.getString(6)));
+                contador++;
             }
             rs.close();
             st.close();
@@ -66,10 +68,9 @@ public class DataSourcePostgreSQL implements DataSource {
             System.out.println(rs);
 
             while (rs.next()) {
-//                System.out.println(rs.getString(1) + " " + rs.getString(2) + " " + rs.getString(3)
-//                 + " " + rs.getString(4) + " " + rs.getString(5) + " " + rs.getString(6));
-                arreglo.add(new Factura(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4),
+                arreglo.add(new Factura(contador, rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4),
                         rs.getString(5), rs.getString(6)));
+                contador++;
             }
 
             rs.close();
@@ -80,5 +81,4 @@ public class DataSourcePostgreSQL implements DataSource {
         }
         return arreglo;
     }
-
 }
