@@ -22,9 +22,11 @@ import java.util.ArrayList;
 public class MyUI extends UI {
 
     private ArrayList<Factura> arreglo;
+    private ArrayList<Factura> arregloTemporal;
+
     private Grid<Factura> grid = new Grid<>();
     private TextField txt;
-    private Label valor;
+    private Label valor, paginas;
 
     @Override
     protected void init(VaadinRequest vaadinRequest) {
@@ -58,10 +60,17 @@ public class MyUI extends UI {
         }
         valor = new Label("Numero de items: " + contador);
 //        Label bt = new Label("Siguiente pagina");
-//        Label paginas = new Label(" de"  );
+        paginas = new Label(" de");
 //        Label bt2 = new Label("Anterior pagina");
 
-        
+        if (arreglo.size() == arreglo.size() / 20) {
+
+            paginas.setValue("Pagina 1 de " + (arreglo.size() / 20));
+        } else {
+            paginas.setValue("Pagina 1 de " + ((arreglo.size() / 20) + 1));
+
+        }
+
         grid.setSizeFull();
         columnas();
         final HorizontalLayout l = new HorizontalLayout();
@@ -70,9 +79,9 @@ public class MyUI extends UI {
         l.addComponent(txt);
         l.addComponent(date);
         l.addComponent(btn);
-        l2.addComponent(valor);  
+        l2.addComponent(valor);
 //        l2.addComponent(bt);
-//        l2.addComponent(paginas);
+        l2.addComponent(paginas);
 //        l2.addComponent(bt2);
         layout.addComponent(l);
         layout.addComponent(grid);
@@ -87,9 +96,15 @@ public class MyUI extends UI {
 
     public void llenarTabla() {
         DataSourcePostgreSQL s = new DataSourcePostgreSQL();
+        arreglo = new ArrayList<>();
         arreglo = s.crearArreglo("SELECT fecha_factura, folio_fiscal, fecha_mx, "
                 + "nombre_producto, medico, correo   FROM public.vista_factura_por_compra_plan;");
-        grid.setItems(arreglo);
+        arregloTemporal = new ArrayList<>();
+        for (int i = 0; i < 20; i++) {
+            arregloTemporal.add(arreglo.get(i));
+        }
+
+        grid.setItems(arregloTemporal);
     }
 
     public void filtrar(String consulta) {

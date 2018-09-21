@@ -78,4 +78,10 @@ public class Factura {
         this.correo = correo;
     }
 
+    @Override
+    public String toString() {
+        return "Factura{" + "id=" + id + ", fechaFactura=" + fechaFactura + ", folioFiscal=" + folioFiscal + ", fechaCompra=" + fechaCompra + ", productoComprado=" + productoComprado + ", nombre=" + nombre + ", correo=" + correo + '}';
+    }
+
+    
 }
