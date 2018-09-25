@@ -15,6 +15,7 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import java.awt.event.MouseEvent;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
@@ -27,6 +28,7 @@ public class MyUI extends UI {
     private Grid<Factura> grid = new Grid<>();
     private TextField txt;
     private Label valor, paginas;
+    private Integer pagina = 1, paginaSiguiente, paginaFinal;
 
     @Override
     protected void init(VaadinRequest vaadinRequest) {
@@ -58,16 +60,36 @@ public class MyUI extends UI {
         for (int i = 0; i < arreglo.size(); i++) {
             contador++;
         }
-        valor = new Label("Numero de items: " + contador);
-//        Label bt = new Label("Siguiente pagina");
-        paginas = new Label(" de");
-//        Label bt2 = new Label("Anterior pagina");
+        valor = new Label("Numero de registros totales: " + contador);
+        Button bt = new Button("Siguiente");
+        bt.addClickListener(e -> {
+            if (paginaFinal == pagina) {
+
+            } else {
+                paginaSiguiente = pagina + 1;
+                cambiarPagina(pagina, paginaSiguiente);
+                pagina++;
+            }
+        });
+
+        paginas = new Label();
+        Button bt2 = new Button("Anterior");
+        bt2.addClickListener(e -> {
+            if (pagina == 1) {
+
+            } else {
+                paginaSiguiente = pagina - 1;
+                cambiarPagina(pagina, paginaSiguiente);
+                pagina--;
+            }
+        });
 
         if (arreglo.size() == arreglo.size() / 20) {
-
-            paginas.setValue("Pagina 1 de " + (arreglo.size() / 20));
+            paginas.setValue("Pagina: " + pagina + " / " + (arreglo.size() / 20));
+            paginaFinal = arreglo.size() / 20;
         } else {
-            paginas.setValue("Pagina 1 de " + ((arreglo.size() / 20) + 1));
+            paginas.setValue("Pagina: " + pagina + " / " + ((arreglo.size() / 20) + 1));
+            paginaFinal = (arreglo.size() / 20) + 1;
 
         }
 
@@ -75,14 +97,17 @@ public class MyUI extends UI {
         columnas();
         final HorizontalLayout l = new HorizontalLayout();
         final HorizontalLayout l2 = new HorizontalLayout();
+        Label la = new Label();
+        la.setWidth("600px");
 
         l.addComponent(txt);
         l.addComponent(date);
         l.addComponent(btn);
         l2.addComponent(valor);
-//        l2.addComponent(bt);
+        l2.addComponent(la);
+        l2.addComponent(bt2);
         l2.addComponent(paginas);
-//        l2.addComponent(bt2);
+        l2.addComponent(bt);
         layout.addComponent(l);
         layout.addComponent(grid);
         layout.addComponent(l2);
@@ -107,12 +132,69 @@ public class MyUI extends UI {
         grid.setItems(arregloTemporal);
     }
 
+    public void cambiarPagina(Integer paginaA, Integer paginaS) {
+        DataSourcePostgreSQL s = new DataSourcePostgreSQL();
+        arreglo = new ArrayList<>();
+        arreglo = s.crearArreglo("SELECT fecha_factura, folio_fiscal, fecha_mx, "
+                + "nombre_producto, medico, correo   FROM public.vista_factura_por_compra_plan;");
+        arregloTemporal = new ArrayList<>();
+
+        if (paginaS > paginaA) {
+
+            if (arreglo.size() < (20 * paginaS)) {
+                for (int i = 0; i < arreglo.size(); i++) {
+                    if (i >= (20 * paginaA)) {
+                        arregloTemporal.add(arreglo.get(i));
+                    }
+                }
+            } else {
+                for (int i = 0; i < (20 * paginaS); i++) {
+                    if (i >= (20 * paginaA)) {
+                        arregloTemporal.add(arreglo.get(i));
+                    }
+                }
+            }
+            if (arreglo.size() == arreglo.size() / 20) {
+                paginas.setValue("Pagina: " + paginaS + " / " + (arreglo.size() / 20));
+            } else {
+                paginas.setValue("Pagina: " + paginaS + " / " + ((arreglo.size() / 20) + 1));
+            }
+
+        } else {
+            for (int i = 0; i < arreglo.size(); i++) {
+                if (i >= (20 * (paginaS - 1)) && i < (20 * paginaS)) {
+                    arregloTemporal.add(arreglo.get(i));
+                }
+            }
+
+            if (arreglo.size() == arreglo.size() / 20) {
+                paginas.setValue("Pagina: " + paginaS + " / " + (arreglo.size() / 20));
+            } else {
+                paginas.setValue("Pagina: " + paginaS + " / " + ((arreglo.size() / 20) + 1));
+            }
+        }
+
+        grid.setItems(arregloTemporal);
+    }
+
     public void filtrar(String consulta) {
         DataSourcePostgreSQL s = new DataSourcePostgreSQL();
         arreglo = s.crearArreglo(consulta);
         int a = arreglo.size();
         System.out.println("arreglo " + a);
         valor.setValue("Numero de items: " + a);
+
+        if (arreglo.size() == arreglo.size() / 20) {
+            paginas.setValue("Pagina: 1 / " + (a / 20));
+            paginaFinal = arreglo.size() / 20;
+        } else {
+            paginas.setValue("Pagina: 1 / " + ((a / 20) + 1));
+            paginaFinal = (arreglo.size() / 20) + 1;
+        }
+        
+        if(arreglo.size() == 0)
+            paginas.setValue("Pagina: 1 / 1");
+
         grid.setItems(arreglo);
     }
 
@@ -126,6 +208,7 @@ public class MyUI extends UI {
                 contador++;
             }
             valor.setValue("Numero de items: " + contador);
+            paginas.setValue("Pagina: 1 / " + ((arreglo.size() / 20) + 1));
             llenarTabla();
         } else {
             filtrar("SELECT fecha_factura, folio_fiscal, fecha_mx, "
@@ -143,4 +226,5 @@ public class MyUI extends UI {
         grid.addColumn(Factura::getFolioFiscal).setCaption("Folio Fiscal").setResizable(false);
         grid.addColumn(Factura::getProductoComprado).setCaption("Producto comprado").setExpandRatio(1);
     }
+
 }
