@@ -3,7 +3,6 @@ package com.datateam.bd;
 import javax.servlet.annotation.WebServlet;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.VaadinServletConfiguration;
-import com.vaadin.data.HasValue;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.shared.ui.ValueChangeMode;
@@ -15,7 +14,6 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import java.awt.event.MouseEvent;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
@@ -29,6 +27,7 @@ public class MyUI extends UI {
     private TextField txt;
     private Label valor, paginas;
     private Integer pagina = 1, paginaSiguiente, paginaFinal;
+    private String datos;
 
     @Override
     protected void init(VaadinRequest vaadinRequest) {
@@ -54,8 +53,9 @@ public class MyUI extends UI {
         });
 
         DataSourcePostgreSQL s = new DataSourcePostgreSQL();
-        arreglo = s.crearArreglo("SELECT fecha_factura, folio_fiscal, fecha_mx, "
-                + "nombre_producto, medico, correo   FROM public.vista_factura_por_compra_plan;");
+        datos = "SELECT fecha_factura, folio_fiscal, fecha_mx, "
+                + "nombre_producto, medico, correo   FROM public.vista_factura_por_compra_plan;";
+        arreglo = s.crearArreglo(datos);
         Integer contador = 0;
         for (int i = 0; i < arreglo.size(); i++) {
             contador++;
@@ -67,7 +67,7 @@ public class MyUI extends UI {
 
             } else {
                 paginaSiguiente = pagina + 1;
-                cambiarPagina(pagina, paginaSiguiente);
+                cambiarPagina(pagina, paginaSiguiente, datos);
                 pagina++;
             }
         });
@@ -79,7 +79,7 @@ public class MyUI extends UI {
 
             } else {
                 paginaSiguiente = pagina - 1;
-                cambiarPagina(pagina, paginaSiguiente);
+                cambiarPagina(pagina, paginaSiguiente,datos);
                 pagina--;
             }
         });
@@ -122,8 +122,9 @@ public class MyUI extends UI {
     public void llenarTabla() {
         DataSourcePostgreSQL s = new DataSourcePostgreSQL();
         arreglo = new ArrayList<>();
-        arreglo = s.crearArreglo("SELECT fecha_factura, folio_fiscal, fecha_mx, "
-                + "nombre_producto, medico, correo   FROM public.vista_factura_por_compra_plan;");
+        datos = "SELECT fecha_factura, folio_fiscal, fecha_mx, "
+                + "nombre_producto, medico, correo   FROM public.vista_factura_por_compra_plan;";
+        arreglo = s.crearArreglo(datos);
         arregloTemporal = new ArrayList<>();
         for (int i = 0; i < 20; i++) {
             arregloTemporal.add(arreglo.get(i));
@@ -131,12 +132,44 @@ public class MyUI extends UI {
 
         grid.setItems(arregloTemporal);
     }
+    
+    public void filtrar(String consulta) {
+        DataSourcePostgreSQL s = new DataSourcePostgreSQL();
+        arreglo = s.crearArreglo(consulta);
+        int a = arreglo.size();
+        System.out.println("arreglo " + a);
+        valor.setValue("Numero de items: " + a);
 
-    public void cambiarPagina(Integer paginaA, Integer paginaS) {
+        if (arreglo.size() == arreglo.size() / 20) {
+            paginas.setValue("Pagina: 1 / " + (a / 20));
+            paginaFinal = arreglo.size() / 20;
+        } else {
+            paginas.setValue("Pagina: 1 / " + ((a / 20) + 1));
+            paginaFinal = (arreglo.size() / 20) + 1;
+        }
+
+        if (arreglo.size() == 0) {
+            paginas.setValue("Pagina: 1 / 1");
+        }
+
+        arregloTemporal = new ArrayList<>();
+        if (arreglo.size() > 20) {
+            for (int i = 0; i < 20; i++) {
+                arregloTemporal.add(arreglo.get(i));
+            }
+        } else {
+            for (int i = 0; i < arreglo.size(); i++) {
+                arregloTemporal.add(arreglo.get(i));
+            }
+        }
+
+        grid.setItems(arregloTemporal);
+    }
+    
+    public void cambiarPagina(Integer paginaA, Integer paginaS, String datos) {
         DataSourcePostgreSQL s = new DataSourcePostgreSQL();
         arreglo = new ArrayList<>();
-        arreglo = s.crearArreglo("SELECT fecha_factura, folio_fiscal, fecha_mx, "
-                + "nombre_producto, medico, correo   FROM public.vista_factura_por_compra_plan;");
+        arreglo = s.crearArreglo(datos);
         arregloTemporal = new ArrayList<>();
 
         if (paginaS > paginaA) {
@@ -177,43 +210,27 @@ public class MyUI extends UI {
         grid.setItems(arregloTemporal);
     }
 
-    public void filtrar(String consulta) {
-        DataSourcePostgreSQL s = new DataSourcePostgreSQL();
-        arreglo = s.crearArreglo(consulta);
-        int a = arreglo.size();
-        System.out.println("arreglo " + a);
-        valor.setValue("Numero de items: " + a);
-
-        if (arreglo.size() == arreglo.size() / 20) {
-            paginas.setValue("Pagina: 1 / " + (a / 20));
-            paginaFinal = arreglo.size() / 20;
-        } else {
-            paginas.setValue("Pagina: 1 / " + ((a / 20) + 1));
-            paginaFinal = (arreglo.size() / 20) + 1;
-        }
-        
-        if(arreglo.size() == 0)
-            paginas.setValue("Pagina: 1 / 1");
-
-        grid.setItems(arreglo);
-    }
 
     public void filtrarNombre() {
         if (txt.getValue().equals("")) {
             DataSourcePostgreSQL s = new DataSourcePostgreSQL();
-            arreglo = s.crearArreglo("SELECT fecha_factura, folio_fiscal, fecha_mx, "
-                    + "nombre_producto, medico, correo   FROM public.vista_factura_por_compra_plan;");
+            datos = "SELECT fecha_factura, folio_fiscal, fecha_mx, "
+                    + "nombre_producto, medico, correo   FROM public.vista_factura_por_compra_plan;";
+            arreglo = s.crearArreglo(datos);
             Integer contador = 0;
             for (int i = 0; i < arreglo.size(); i++) {
                 contador++;
             }
             valor.setValue("Numero de items: " + contador);
             paginas.setValue("Pagina: 1 / " + ((arreglo.size() / 20) + 1));
+            pagina = 1;
+            paginaFinal = (arreglo.size() / 20) + 1;
             llenarTabla();
         } else {
-            filtrar("SELECT fecha_factura, folio_fiscal, fecha_mx, "
+            datos = "SELECT fecha_factura, folio_fiscal, fecha_mx, "
                     + "nombre_producto, medico, correo   FROM public.vista_factura_por_compra_plan"
-                    + " where medico ilike '%" + txt.getValue() + "%'");
+                    + " where medico ilike '%" + txt.getValue() + "%'";
+            filtrar(datos);
         }
     }
 
