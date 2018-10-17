@@ -28,25 +28,25 @@ public class TablaPantalla extends VerticalLayout implements View {
     private String consultaDefault = "SELECT fecha_factura, folio_fiscal, fecha_mx, "
             + "nombre_producto, medico, correo   FROM public.vista_factura_por_compra_plan;";
     public static final String NAME = "Tabla";
-    
+
     Button bt2, bt;
-    Label la3;
-    
+    Label lblIzquierda, lblDerecha;
+
     public TablaPantalla() {
 
         DateField date = new DateField();
         date.setValue(LocalDate.now());
-        
+
         DateField date2 = new DateField();
         date2.setValue(LocalDate.now());
-        
-        date.addValueChangeListener(e -> 
-            filtrar("SELECT fecha_factura, folio_fiscal, fecha_mx, "
-                    + "nombre_producto, medico, correo   FROM public.vista_factura_por_compra_plan"
-                    + " where fecha_factura = '" + date.getValue() + "';")
+
+        date.addValueChangeListener(e
+                -> filtrar("SELECT fecha_factura, folio_fiscal, fecha_mx, "
+                        + "nombre_producto, medico, correo   FROM public.vista_factura_por_compra_plan"
+                        + " where fecha_factura = '" + date.getValue() + "';")
         );
-        
-        items = 101;
+
+        items = 20;
 
         txt = new TextField();
         txt.setPlaceholder("Buscar");
@@ -78,8 +78,14 @@ public class TablaPantalla extends VerticalLayout implements View {
                 paginaSiguiente = pagina + 1;
                 cambiarPagina(pagina, paginaSiguiente, datos);
                 pagina++;
+
+                if (pagina == paginaFinal) {
+                    bt.setVisible(false);
+                    lblDerecha.setVisible(true);
+                }
             }
         });
+        bt.setStyleName("btn");
 
         paginas = new Label();
         bt2 = new Button("Anterior");
@@ -90,10 +96,9 @@ public class TablaPantalla extends VerticalLayout implements View {
                 paginaSiguiente = pagina - 1;
                 cambiarPagina(pagina, paginaSiguiente, datos);
                 pagina--;
+                botonesPag();
             }
         });
-
-        paginacion();
 
         Button salir = new Button("Cerrar Sesion");
         Label asd = new Label();
@@ -107,14 +112,17 @@ public class TablaPantalla extends VerticalLayout implements View {
 
         grid.setSizeFull();
         columnas();
+
         final HorizontalLayout l = new HorizontalLayout();
         final HorizontalLayout l2 = new HorizontalLayout();
         Label la = new Label();
         la.setWidth("700px");
         Label la2 = new Label();
         la2.setWidth("450px");
-        la3 = new Label();
-        la3.setWidth("90px");
+        lblIzquierda = new Label();
+        lblIzquierda.setWidth("90px");
+        lblDerecha = new Label();
+        lblDerecha.setWidth("90px");
         Label laa = new Label("Datos: ");
         ComboBox<Integer> combo = new ComboBox<>();
         combo.setPlaceholder("20");
@@ -132,8 +140,9 @@ public class TablaPantalla extends VerticalLayout implements View {
         l2.addComponent(combo);
         l2.addComponent(la);
         l2.addComponent(bt2);
-        l2.addComponent(la3);
+        l2.addComponent(lblIzquierda);
         l2.addComponent(paginas);
+        l2.addComponent(lblDerecha);
         l2.addComponent(bt);
         addComponent(l);
         addComponent(grid);
@@ -141,13 +150,14 @@ public class TablaPantalla extends VerticalLayout implements View {
         addComponent(asd);
         addComponent(salir);
 
-        //bt.setEnabled(false);
-        bt2.setVisible(false);
+        lblDerecha.setVisible(false);
+
+        paginacion();
     }
 
     public void tamanoPagina(Integer dato) {
         DataSourcePostgreSQL s = new DataSourcePostgreSQL();
-        arreglo = s.crearArreglo(consultaDefault);
+        arregloTemporal = this.getArreglo();
         items = dato;
         int a = arreglo.size();
         System.out.println("arreglo " + a);
@@ -177,7 +187,7 @@ public class TablaPantalla extends VerticalLayout implements View {
         }
 
         pagina = 1;
-        
+
         botonesPag();
 
         grid.setItems(arregloTemporal);
@@ -192,7 +202,8 @@ public class TablaPantalla extends VerticalLayout implements View {
             paginas.setValue("Pagina: " + pagina + " / " + ((arreglo.size() / items) + 1));
             paginaFinal = (arreglo.size() / items) + 1;
         }
-        
+
+        botonesPag();
     }
 
     public void llenarTabla() {
@@ -204,6 +215,8 @@ public class TablaPantalla extends VerticalLayout implements View {
         for (int i = 0; i < items; i++) {
             arregloTemporal.add(arreglo.get(i));
         }
+
+        this.setArreglo(arreglo);
 
         grid.setItems(arregloTemporal);
     }
@@ -218,13 +231,20 @@ public class TablaPantalla extends VerticalLayout implements View {
         if (arreglo.size() == (arreglo.size() / items) * items) {
             paginas.setValue("Pagina: 1 / " + (a / items));
             paginaFinal = arreglo.size() / items;
+            activar();
+            botonesPag();
         } else {
             paginas.setValue("Pagina: 1 / " + ((a / items) + 1));
             paginaFinal = (arreglo.size() / items) + 1;
+            activar();
+            botonesPag();
         }
 
         if (arreglo.size() == 0) {
             paginas.setValue("Pagina: 1 / 1");
+            pagina = 1;
+            paginaFinal = 1;
+            botonesPag();
         }
 
         arregloTemporal = new ArrayList<>();
@@ -238,6 +258,7 @@ public class TablaPantalla extends VerticalLayout implements View {
             }
         }
 
+        this.setArreglo(arreglo);
         pagina = 1;
         grid.setItems(arregloTemporal);
     }
@@ -273,7 +294,7 @@ public class TablaPantalla extends VerticalLayout implements View {
         }
 
         bt2.setVisible(true);
-        la3.setVisible(false);
+        lblIzquierda.setVisible(false);
         grid.setItems(arregloTemporal);
     }
 
@@ -285,20 +306,41 @@ public class TablaPantalla extends VerticalLayout implements View {
             paginas.setValue("Pagina: " + paginaS + " / " + ((arreglo.size() / items) + 1));
             paginaFinal = (arreglo.size() / items) + 1;
         }
-        
     }
 
-    public void botonesPag(){
-        if(pagina == paginaFinal){
+    public void botonesPag() {
+        if (pagina == paginaFinal) {
             bt.setVisible(false);
-        } 
-        
-        if(pagina == 1){
+            lblDerecha.setVisible(true);
+        } else {
+            bt.setVisible(true);
+            lblDerecha.setVisible(false);
+        }
+
+        if (pagina == 1) {
             bt2.setVisible(false);
-            la3.setVisible(true);
+            lblIzquierda.setVisible(true);
+        } else {
+            bt2.setVisible(true);
+            lblIzquierda.setVisible(false);
+        }
+
+        if (paginaFinal == 1) {
+            bt.setVisible(false);
+            lblDerecha.setVisible(true);
+        } else {
+            bt.setVisible(true);
+            lblDerecha.setVisible(false);
         }
     }
-    
+
+    public void activar() {
+        bt2.setVisible(true);
+        bt.setVisible(true);
+        lblDerecha.setVisible(false);
+        lblIzquierda.setVisible(false);
+    }
+
     public void filtrarNombre() {
         if (txt.getValue().equals("")) {
             DataSourcePostgreSQL s = new DataSourcePostgreSQL();
@@ -325,7 +367,7 @@ public class TablaPantalla extends VerticalLayout implements View {
     }
 
     public void columnas() {
-        grid.addColumn(Factura::getId).setWidth(45.0);
+        grid.addColumn(Factura::getId).setWidth(46.0);
         grid.addColumn(Factura::getNombre).setCaption("Nombre de Usuario").setResizable(false);
         grid.addColumn(Factura::getCorreo).setCaption("Correo").setResizable(false);
         grid.addColumn(Factura::getFechaFactura).setCaption("Fecha de Factura").setResizable(false);
@@ -333,4 +375,13 @@ public class TablaPantalla extends VerticalLayout implements View {
         grid.addColumn(Factura::getFolioFiscal).setCaption("Folio Fiscal").setResizable(false);
         grid.addColumn(Factura::getProductoComprado).setCaption("Producto comprado").setExpandRatio(1);
     }
+
+    public ArrayList<Factura> getArreglo() {
+        return arreglo;
+    }
+
+    public void setArreglo(ArrayList<Factura> arreglo) {
+        this.arreglo = arreglo;
+    }
+
 }

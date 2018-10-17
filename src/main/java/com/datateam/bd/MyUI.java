@@ -8,6 +8,9 @@ import com.vaadin.server.Page;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.ui.UI;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Theme("mytheme")
 public class MyUI extends UI {
@@ -15,7 +18,7 @@ public class MyUI extends UI {
     @Override
     protected void init(VaadinRequest vaadinRequest) {
         new Navigator(this, this);
-
+        
         getNavigator().addView(LoginPantalla.NAME, LoginPantalla.class);
         getNavigator().setErrorView(LoginPantalla.class);
      
