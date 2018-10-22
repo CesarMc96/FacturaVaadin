@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import com.vaadin.navigator.View;
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinSession;
+import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.Panel;
 
 public class TablaPantalla extends VerticalLayout implements View {
 
@@ -21,7 +23,7 @@ public class TablaPantalla extends VerticalLayout implements View {
     private ArrayList<Factura> arregloTemporal;
 
     private Grid<Factura> grid = new Grid<>();
-    private TextField txt;
+    private TextField txt, nombre, correo, folio;
     private Label valor, paginas;
     private Integer pagina = 1, paginaSiguiente, paginaFinal, items;
     private String datos;
@@ -29,8 +31,10 @@ public class TablaPantalla extends VerticalLayout implements View {
             + "nombre_producto, medico, correo   FROM public.vista_factura_por_compra_plan;";
     public static final String NAME = "Tabla";
 
-    Button bt2, bt;
+    Button bt2, bt, btnFiltroAvanzado;
     Label lblIzquierda, lblDerecha;
+    private ArrayList<Factura> filtroA;
+    private ComboBox<String> compras;
 
     public TablaPantalla() {
 
@@ -59,7 +63,11 @@ public class TablaPantalla extends VerticalLayout implements View {
 
         btn.addClickListener(e -> {
             txt.setValue("");
-            llenarTabla();
+            nombre.setValue("");
+            correo.setValue("");
+            folio.setValue("");
+            compras.setValue("");
+            filtrarNombre();
         });
 
         DataSourcePostgreSQL s = new DataSourcePostgreSQL();
@@ -130,10 +138,47 @@ public class TablaPantalla extends VerticalLayout implements View {
         combo.setWidth("100px");
         combo.addValueChangeListener(e -> tamanoPagina(combo.getValue()));
 
+        final HorizontalLayout l3 = new HorizontalLayout();
+        btnFiltroAvanzado = new Button("Busqueda Avanzada");
+        FormLayout content = new FormLayout();
+        nombre = new TextField();
+        nombre.setPlaceholder("Nombre");
+        correo = new TextField();
+        correo.setPlaceholder("Correo");
+        folio = new TextField();
+        folio.setPlaceholder("Folio");
+        compras = new ComboBox<>();
+        compras.setPlaceholder("Producto");
+        compras.setItems("Extension Cuenta", "Pago anual", "Paquete", "Contratacion");
+        Button btnBuscarA = new Button("Buscar");
+
+        btnFiltroAvanzado.addClickListener(e -> {
+            if (btnFiltroAvanzado.getCaption() == "Busqueda Avanzada") {
+                content.setVisible(true);
+                btnFiltroAvanzado.setCaption("Busqueda Avanzada ");
+            } else {
+                content.setVisible(false);
+                btnFiltroAvanzado.setCaption("Busqueda Avanzada");
+            }
+
+        });
+
+        btnBuscarA.addClickListener(e -> {
+            filtroAvanzado(compras.getValue());
+        });
+
+        /*l3.addComponent(date);
+        l3.addComponent(date2);*/
+        l3.addComponent(nombre);
+        l3.addComponent(correo);
+        l3.addComponent(folio);
+        l3.addComponent(compras);
+        l3.addComponent(btnBuscarA);
+        content.addComponent(l3);
+
         l.addComponent(txt);
-        //l.addComponent(date);
-        //l.addComponent(date2);
         l.addComponent(btn);
+        l.addComponent(btnFiltroAvanzado);
         l.addComponent(la2);
         l.addComponent(valor);
         l2.addComponent(laa);
@@ -145,11 +190,13 @@ public class TablaPantalla extends VerticalLayout implements View {
         l2.addComponent(lblDerecha);
         l2.addComponent(bt);
         addComponent(l);
+        addComponent(content);
         addComponent(grid);
         addComponent(l2);
         addComponent(asd);
         addComponent(salir);
 
+        content.setVisible(false);
         lblDerecha.setVisible(false);
 
         paginacion();
@@ -366,6 +413,37 @@ public class TablaPantalla extends VerticalLayout implements View {
         }
     }
 
+    public void filtroAvanzado(String comprao) {
+        String nom = nombre.getValue();
+        String fol = folio.getValue();
+        String email = correo.getValue();
+        String comprado = comprao;
+        String v1 = "", v2 = "", v3 = "", v4 = "";
+        Integer contador = 0;
+
+        datos = "SELECT fecha_factura, folio_fiscal, fecha_mx, "
+                + "nombre_producto, medico, correo   FROM public.vista_factura_por_compra_plan ";
+
+        String datos1 = "SELECT fecha_factura, folio_fiscal, fecha_mx, "
+                + "nombre_producto, medico, correo FROM ";
+
+        v1 = "where nombre_producto ilike '%" + comprado + "%'";
+        v2 = "where medico ilike '%" + nom + "%'";
+        v3 = "where folio_fiscal ilike '%" + fol + "%'";
+        v4 = "where correo ilike '%" + email + "%'";
+
+        if (comprado == null) {
+            v1 = "where nombre_producto ilike '%%'";
+            datos1 = datos1 + "(" + datos1 + "(" + (datos + v2) + ") A " + v1 + ") B " + v4;
+            System.out.println("datos1 " + datos1);
+            filtrar(datos1);
+        } else {
+            datos1 = datos1 + "(" + datos1 + "(" + (datos + v2) + ") A " + v1 + ") B " + v4;
+            System.out.println("datos1 " + datos1);
+            filtrar(datos1);
+        }
+    }
+
     public void columnas() {
         grid.addColumn(Factura::getId).setWidth(46.0);
         grid.addColumn(Factura::getNombre).setCaption("Nombre de Usuario").setResizable(false);
@@ -382,6 +460,14 @@ public class TablaPantalla extends VerticalLayout implements View {
 
     public void setArreglo(ArrayList<Factura> arreglo) {
         this.arreglo = arreglo;
+    }
+
+    public ArrayList<Factura> getFiltroA() {
+        return filtroA;
+    }
+
+    public void setFiltroA(ArrayList<Factura> filtroA) {
+        this.filtroA = filtroA;
     }
 
 }
