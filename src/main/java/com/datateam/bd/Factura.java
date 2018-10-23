@@ -1,7 +1,5 @@
 package com.datateam.bd;
 
-import java.util.Date;
-
 public class Factura {
 
     private Integer id;
@@ -14,12 +12,20 @@ public class Factura {
 
     public Factura(Integer id, String fechaFactura, String folioFiscal, String fechaCompra, String productoComprado, String nombre, String correo) {
         this.id = id;
-        this.fechaFactura = fechaFactura;
+        
         this.folioFiscal = folioFiscal;
         this.fechaCompra = fechaCompra;
         this.productoComprado = productoComprado;
         this.nombre = nombre;
         this.correo = correo;
+        
+        String otro = fechaFactura;
+        String [] parts = otro.split("-");
+        String par1 = parts[0]; 
+        String par2 = parts[1];
+        String par3 = parts[2];
+                
+        this.fechaFactura = par3+"/"+par2+"/"+par1;
     }
 
     public Integer getId() {

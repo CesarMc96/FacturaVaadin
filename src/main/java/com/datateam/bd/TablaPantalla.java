@@ -15,7 +15,6 @@ import com.vaadin.navigator.View;
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.Panel;
 
 public class TablaPantalla extends VerticalLayout implements View {
 
@@ -24,8 +23,9 @@ public class TablaPantalla extends VerticalLayout implements View {
 
     private Grid<Factura> grid = new Grid<>();
     private TextField txt, nombre, correo, folio;
+    private DateField date, date2;
     private Label valor, paginas;
-    private Integer pagina = 1, paginaSiguiente, paginaFinal, items;
+    private Integer pagina = 1, paginaSiguiente, paginaFinal, items, fecha = 0;
     private String datos;
     private String consultaDefault = "SELECT fecha_factura, folio_fiscal, fecha_mx, "
             + "nombre_producto, medico, correo   FROM public.vista_factura_por_compra_plan;";
@@ -38,18 +38,17 @@ public class TablaPantalla extends VerticalLayout implements View {
 
     public TablaPantalla() {
 
-        DateField date = new DateField();
+        date = new DateField();
         date.setValue(LocalDate.now());
 
-        DateField date2 = new DateField();
+        date2 = new DateField();
         date2.setValue(LocalDate.now());
 
-        date.addValueChangeListener(e
+        /*date.addValueChangeListener(e
                 -> filtrar("SELECT fecha_factura, folio_fiscal, fecha_mx, "
                         + "nombre_producto, medico, correo   FROM public.vista_factura_por_compra_plan"
                         + " where fecha_factura = '" + date.getValue() + "';")
-        );
-
+        );*/
         items = 20;
 
         txt = new TextField();
@@ -151,6 +150,7 @@ public class TablaPantalla extends VerticalLayout implements View {
         compras.setPlaceholder("Producto");
         compras.setItems("Extension Cuenta", "Pago anual", "Paquete", "Contratacion");
         Button btnBuscarA = new Button("Buscar");
+        Button activarFechas = new Button("Elegir fecha");
 
         btnFiltroAvanzado.addClickListener(e -> {
             if (btnFiltroAvanzado.getCaption() == "Busqueda Avanzada") {
@@ -158,23 +158,34 @@ public class TablaPantalla extends VerticalLayout implements View {
                 btnFiltroAvanzado.setCaption("Busqueda Avanzada ");
             } else {
                 content.setVisible(false);
+                activarFechas.setVisible(true);
+                date.setVisible(false);
+                date2.setVisible(false);
+                fecha = 0;
                 btnFiltroAvanzado.setCaption("Busqueda Avanzada");
             }
+        });
 
+        activarFechas.addClickListener(e -> {
+            date.setVisible(true);
+            date2.setVisible(true);
+            activarFechas.setVisible(false);
+            fecha = 1;
         });
 
         btnBuscarA.addClickListener(e -> {
             filtroAvanzado(compras.getValue());
         });
 
-        /*l3.addComponent(date);
-        l3.addComponent(date2);*/
+        l3.addComponent(activarFechas);
+        l3.addComponent(date);
+        l3.addComponent(date2);
         l3.addComponent(nombre);
         l3.addComponent(correo);
         l3.addComponent(folio);
         l3.addComponent(compras);
-        l3.addComponent(btnBuscarA);
         content.addComponent(l3);
+        content.addComponent(btnBuscarA);
 
         l.addComponent(txt);
         l.addComponent(btn);
@@ -198,6 +209,8 @@ public class TablaPantalla extends VerticalLayout implements View {
 
         content.setVisible(false);
         lblDerecha.setVisible(false);
+        date.setVisible(false);
+        date2.setVisible(false);
 
         paginacion();
     }
@@ -417,8 +430,10 @@ public class TablaPantalla extends VerticalLayout implements View {
         String nom = nombre.getValue();
         String fol = folio.getValue();
         String email = correo.getValue();
+        LocalDate fechaI = date.getValue();
+        LocalDate fechaF = date2.getValue();
         String comprado = comprao;
-        String v1 = "", v2 = "", v3 = "", v4 = "";
+        String v1 = "", v2 = "", v3 = "", v4 = "", v5 = "";
         Integer contador = 0;
 
         datos = "SELECT fecha_factura, folio_fiscal, fecha_mx, "
@@ -431,17 +446,32 @@ public class TablaPantalla extends VerticalLayout implements View {
         v2 = "where medico ilike '%" + nom + "%'";
         v3 = "where folio_fiscal ilike '%" + fol + "%'";
         v4 = "where correo ilike '%" + email + "%'";
+        v5 = "where fecha_factura >='" + fechaI + "' and fecha_factura <='" + fechaF + "'";
 
         if (comprado == null) {
             v1 = "where nombre_producto ilike '%%'";
-            datos1 = datos1 + "(" + datos1 + "(" + (datos + v2) + ") A " + v1 + ") B " + v4;
-            System.out.println("datos1 " + datos1);
-            filtrar(datos1);
-        } else {
-            datos1 = datos1 + "(" + datos1 + "(" + (datos + v2) + ") A " + v1 + ") B " + v4;
-            System.out.println("datos1 " + datos1);
-            filtrar(datos1);
         }
+
+        if (fecha == 1) {
+            if (fechaI == null || fechaF == null) {
+                v5 = "";
+            } else {
+                v5 = "where fecha_factura >='" + fechaI + "' and fecha_factura <='" + fechaF + "'";
+            }
+        } else {
+            v5 = "";
+        }
+
+        datos1 = datos1 + "(" + datos1 + "(" + datos1 + "(" + datos1 + "(" + (datos + v2) + ") A " + v1 + ") B " + v4 + ") C " + v3 + ") D " + v5;
+        System.out.println("datos1 " + datos1);
+        filtrar(datos1);
+
+        if (fecha == 1) {
+
+        } else {
+            System.out.println("no activo fech");
+        }
+
     }
 
     public void columnas() {
